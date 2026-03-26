@@ -3,6 +3,9 @@ import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import Navbar from '../components/Navbar'
 import MatchCard from '../components/MatchCard'
+import ballImg from '../assets/ball.jpg'
+import kidsImg from '../assets/kids.jpg'
+import stadium2Img from '../assets/stadium2.jpg'
 
 export default function Home() {
   const [matches, setMatches] = useState([])
@@ -32,7 +35,15 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen relative">
+      {/* Fondo tríptico */}
+      <div className="fixed inset-0 flex overflow-hidden" style={{ zIndex: -1 }}>
+        <img src={ballImg} alt="" className="w-1/3 h-full object-cover" />
+        <img src={kidsImg} alt="" className="w-1/3 h-full object-cover" />
+        <img src={stadium2Img} alt="" className="w-1/3 h-full object-cover" />
+        <div className="absolute inset-0 bg-black/60" />
+      </div>
+
       <Navbar />
 
       <div className="max-w-lg mx-auto px-4 py-6 space-y-5">

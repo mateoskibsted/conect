@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate, Navigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
+import stadiumImg from '../assets/stadium.jpg'
 
 export default function Login() {
   const navigate = useNavigate()
@@ -48,13 +49,23 @@ export default function Login() {
   return (
     <div
       className="min-h-screen flex items-center justify-center px-4 bg-cover bg-center"
-      style={{ backgroundImage: "url('/src/assets/stadium.jpg')" }}
+      style={{ backgroundImage: `url(${stadiumImg})` }}
     >
-      <div className="absolute inset-0 bg-black/55" />
+      <div className="absolute inset-0 bg-black/65" />
       <div className="relative w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white">Conect</h1>
-          <p className="text-gray-200 mt-1">Conecta con tus amigos para hacer deporte más fácil y rápido que nunca</p>
+          <h1
+            className="text-4xl font-bold text-white"
+            style={{ textShadow: '0 2px 12px rgba(0,0,0,0.9), 0 0 30px rgba(0,0,0,0.7)' }}
+          >
+            Conect
+          </h1>
+          <p
+            className="text-white mt-2 font-medium"
+            style={{ textShadow: '0 1px 6px rgba(0,0,0,0.95)' }}
+          >
+            Conecta con tus amigos para hacer deporte más fácil y rápido que nunca
+          </p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
