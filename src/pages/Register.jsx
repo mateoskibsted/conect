@@ -1,14 +1,28 @@
 import { useState } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams, Navigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { useAuth } from '../context/AuthContext'
 
 export default function Register() {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [searchParams] = useSearchParams()
   const redirect = searchParams.get('redirect') || '/'
   const [form, setForm] = useState({ full_name: '', email: '', password: '' })
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
+
+  if (user === undefined) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
+  }
+
+  if (user) {
+    return <Navigate to={redirect} replace />
+  }
 
   function handleChange(e) {
     setForm({ ...form, [e.target.name]: e.target.value })
@@ -37,11 +51,15 @@ export default function Register() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
+    <div
+      className="min-h-screen flex items-center justify-center px-4 bg-cover bg-center"
+      style={{ backgroundImage: "url('/src/assets/stadium.jpg')" }}
+    >
+      <div className="absolute inset-0 bg-black/55" />
+      <div className="relative w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-green-600">Conect</h1>
-          <p className="text-gray-500 mt-1">Conecta con jugadores que quieren jugar lo mismo que tú</p>
+          <h1 className="text-3xl font-bold text-white">Conect</h1>
+          <p className="text-gray-200 mt-1">Conecta con tus amigos para hacer deporte más fácil y rápido que nunca</p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
