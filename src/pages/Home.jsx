@@ -37,13 +37,14 @@ export default function Home() {
   return (
     <div className="min-h-screen relative">
       {/* Fondo tríptico */}
-      <div className="fixed inset-0 flex overflow-hidden" style={{ zIndex: -1 }}>
+      <div className="fixed inset-0 flex overflow-hidden z-0">
         <img src={ballImg} alt="" className="w-1/3 h-full object-cover" />
         <img src={kidsImg} alt="" className="w-1/3 h-full object-cover" />
         <img src={stadium2Img} alt="" className="w-1/3 h-full object-cover" />
-        <div className="absolute inset-0 bg-black/60" />
+        <div className="absolute inset-0 bg-black/30" />
       </div>
 
+      <div className="relative z-10">
       <Navbar />
 
       <div className="max-w-lg mx-auto px-4 py-6 space-y-5">
@@ -60,7 +61,7 @@ export default function Home() {
 
         {/* Lista de partidos */}
         <div>
-          <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-3">
+          <h2 className="text-sm font-medium text-white uppercase tracking-wide mb-3">
             Partidos próximos
           </h2>
 
@@ -70,9 +71,8 @@ export default function Home() {
             </div>
           ) : matches.length === 0 ? (
             <div className="text-center py-14 space-y-3">
-              <span className="text-5xl">⚽</span>
-              <p className="text-gray-500 font-medium">No hay partidos próximos</p>
-              <p className="text-sm text-gray-400">¡Crea el primero y comparte el link!</p>
+              <p className="text-white font-medium">No hay partidos próximos</p>
+              <p className="text-sm text-white/80">¡Crea el primero y comparte el link!</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -82,6 +82,7 @@ export default function Home() {
             </div>
           )}
         </div>
+      </div>
       </div>
     </div>
   )
