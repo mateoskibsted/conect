@@ -21,6 +21,8 @@ export default function CreateMatch() {
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
 
+  const today = new Date().toISOString().split('T')[0]
+
   function handleChange(e) {
     const { name, value } = e.target
     setForm(prev => ({ ...prev, [name]: value }))
@@ -30,6 +32,21 @@ export default function CreateMatch() {
     e.preventDefault()
     setError(null)
     setLoading(true)
+
+    // Verificar si el usuario ya tiene un partido activo
+    const { data: existing } = await supabase
+      .from('matches')
+      .select('id')
+      .eq('creator_id', user.id)
+      .gte('match_date', today)
+      .limit(1)
+      .single()
+
+    if (existing) {
+      setError('Ya tienes un partido activo. Cancela tu partido antes de crear uno nuevo.')
+      setLoading(false)
+      return
+    }
 
     const slug = generateSlug(form.title)
 
@@ -47,21 +64,23 @@ export default function CreateMatch() {
         visibility:   form.visibility,
         slug,
       })
-      .select('slug')
+      .select('id, slug')
       .single()
-
-    setLoading(false)
 
     if (error) {
       setError('Hubo un error al crear el partido. Intenta de nuevo.')
+      setLoading(false)
       return
     }
 
+    // El creador ocupa automáticamente un cupo
+    await supabase
+      .from('match_players')
+      .insert({ match_id: data.id, player_id: user.id })
+
+    setLoading(false)
     navigate(`/partido/${data.slug}`)
   }
-
-  // Fecha mínima: hoy
-  const today = new Date().toISOString().split('T')[0]
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -192,7 +211,7 @@ export default function CreateMatch() {
                 placeholder="Ej: 14"
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
               />
-              <p className="text-xs text-gray-400 mt-1">Número total de jugadores que pueden unirse</p>
+              <p className="text-xs text-gray-400 mt-1">Incluye tu cupo como organizador</p>
             </div>
           </div>
 

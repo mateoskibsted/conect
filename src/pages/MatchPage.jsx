@@ -116,6 +116,23 @@ export default function MatchPage() {
     setActionLoading(false)
   }
 
+  async function handleCancelMatch() {
+    if (!window.confirm('¿Seguro que querés cancelar este partido? Se eliminará para todos los jugadores.')) return
+
+    setActionLoading(true)
+
+    const { error } = await supabase
+      .from('matches')
+      .delete()
+      .eq('id', match.id)
+
+    setActionLoading(false)
+
+    if (!error) {
+      navigate('/')
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -221,8 +238,17 @@ export default function MatchPage() {
             )}
 
             {isCreator && (
-              <div className="flex items-center justify-center gap-2 bg-green-50 text-green-700 font-medium py-3 rounded-lg text-sm">
-                ⚽ Eres el organizador de este partido
+              <div className="space-y-2">
+                <div className="flex items-center justify-center gap-2 bg-green-50 text-green-700 font-medium py-3 rounded-lg text-sm">
+                  ⚽ Eres el organizador de este partido
+                </div>
+                <button
+                  onClick={handleCancelMatch}
+                  disabled={actionLoading}
+                  className="w-full text-sm text-gray-400 hover:text-red-500 py-1 transition-colors disabled:opacity-50"
+                >
+                  Cancelar partido
+                </button>
               </div>
             )}
           </div>
