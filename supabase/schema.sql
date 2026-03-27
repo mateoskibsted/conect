@@ -65,7 +65,17 @@ create table public.match_players (
 );
 
 -- ============================================================
--- 4. MATCH_REQUESTS (solicitudes de unión)
+-- 4. MATCH_GUESTS (jugadores externos sin cuenta)
+-- ============================================================
+create table public.match_guests (
+  id        uuid primary key default gen_random_uuid(),
+  match_id  uuid not null references public.matches(id) on delete cascade,
+  name      text,           -- null = "Cupo ocupado"
+  added_at  timestamptz default now()
+);
+
+-- ============================================================
+-- 5. MATCH_REQUESTS (solicitudes de unión)
 -- ============================================================
 create table public.match_requests (
   id         uuid primary key default gen_random_uuid(),
@@ -77,12 +87,13 @@ create table public.match_requests (
 );
 
 -- ============================================================
--- 5. ROW LEVEL SECURITY (RLS)
+-- 6. ROW LEVEL SECURITY (RLS)
 -- ============================================================
 
 alter table public.profiles      enable row level security;
 alter table public.matches        enable row level security;
 alter table public.match_players  enable row level security;
+alter table public.match_guests   enable row level security;
 alter table public.match_requests enable row level security;
 
 -- ---------- PROFILES ----------
@@ -229,8 +240,10 @@ begin
     raise exception 'No autorizado';
   end if;
 
-  if (select count(*) from public.match_players where match_id = v_match_id)
-     >= (select total_spots from public.matches where id = v_match_id) then
+  if (
+    (select count(*) from public.match_players where match_id = v_match_id) +
+    (select count(*) from public.match_guests   where match_id = v_match_id)
+  ) >= (select total_spots from public.matches where id = v_match_id) then
     raise exception 'El partido está completo';
   end if;
 
@@ -262,8 +275,89 @@ begin
 end;
 $$;
 
+-- ---------- MATCH_GUESTS ----------
+
+-- Lectura pública
+create policy "match_guests: lectura"
+  on public.match_guests for select
+  using (true);
+
+-- Solo el creador puede agregar invitados
+create policy "match_guests: insertar"
+  on public.match_guests for insert
+  with check (
+    exists (
+      select 1 from public.matches
+      where id = match_guests.match_id and creator_id = auth.uid()
+    )
+  );
+
+-- Eliminar jugador registrado del partido (host o co-host)
+create or replace function public.remove_match_player(p_match_id uuid, p_player_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if exists (
+    select 1 from public.matches where id = p_match_id and creator_id = auth.uid()
+  ) then
+    if p_player_id = auth.uid() then
+      raise exception 'El organizador no puede eliminarse a sí mismo';
+    end if;
+  elsif exists (
+    select 1 from public.match_players
+    where match_id = p_match_id and player_id = auth.uid() and is_cohost = true
+  ) then
+    if p_player_id = auth.uid() then
+      raise exception 'Usa cancelar participación para salir del partido';
+    end if;
+    if exists (select 1 from public.matches where id = p_match_id and creator_id = p_player_id) then
+      raise exception 'El co-host no puede eliminar al organizador';
+    end if;
+  else
+    raise exception 'No autorizado';
+  end if;
+
+  delete from public.match_players where match_id = p_match_id and player_id = p_player_id;
+  update public.match_requests set status = 'rejected'
+    where match_id = p_match_id and player_id = p_player_id;
+end;
+$$;
+
+-- Eliminar invitado externo (host o co-host)
+create or replace function public.remove_match_guest(p_guest_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_match_id uuid;
+begin
+  select match_id into v_match_id from public.match_guests where id = p_guest_id;
+
+  if not found then
+    raise exception 'Invitado no encontrado';
+  end if;
+
+  if not (
+    exists (select 1 from public.matches where id = v_match_id and creator_id = auth.uid())
+    or exists (
+      select 1 from public.match_players
+      where match_id = v_match_id and player_id = auth.uid() and is_cohost = true
+    )
+  ) then
+    raise exception 'No autorizado';
+  end if;
+
+  delete from public.match_guests where id = p_guest_id;
+end;
+$$;
+
 -- ============================================================
--- 5. STORAGE – bucket para fotos de perfil
+-- 7. STORAGE – bucket para fotos de perfil
 -- ============================================================
 insert into storage.buckets (id, name, public)
 values ('avatars', 'avatars', true);

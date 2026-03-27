@@ -32,6 +32,31 @@ function Avatar({ player }) {
   )
 }
 
+function GuestAvatar() {
+  return (
+    <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
+      <svg className="w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+      </svg>
+    </div>
+  )
+}
+
+function RemoveButton({ onClick, disabled }) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className="text-gray-300 hover:text-red-400 disabled:opacity-40 transition-colors p-1 shrink-0"
+      title="Eliminar jugador"
+    >
+      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+  )
+}
+
 export default function MatchPage() {
   const { slug } = useParams()
   const { user } = useAuth()
@@ -39,13 +64,14 @@ export default function MatchPage() {
 
   const [match, setMatch] = useState(null)
   const [players, setPlayers] = useState([])
+  const [guests, setGuests] = useState([])
   const [requests, setRequests] = useState([])
   const [myRequest, setMyRequest] = useState(null)
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState(false)
   const [notFound, setNotFound] = useState(false)
 
-  const occupiedSpots = players.length
+  const occupiedSpots = players.length + guests.length
   const isFull = occupiedSpots >= (match?.total_spots ?? 0)
   const isJoined = user ? players.some(p => p.id === user.id) : false
   const isCreator = user && match ? match.creator_id === user.id : false
@@ -74,6 +100,7 @@ export default function MatchPage() {
     setMatch(matchData)
 
     const playersData = await fetchPlayers(matchData.id)
+    await fetchGuests(matchData.id)
 
     if (user) {
       const isCreatorLocal = matchData.creator_id === user.id
@@ -81,12 +108,8 @@ export default function MatchPage() {
       const isJoinedLocal = playersData.some(p => p.id === user.id)
 
       const tasks = []
-      if (isCreatorLocal || isCohostLocal) {
-        tasks.push(fetchRequests(matchData.id))
-      }
-      if (!isJoinedLocal && !isCreatorLocal) {
-        tasks.push(fetchMyRequest(matchData.id))
-      }
+      if (isCreatorLocal || isCohostLocal) tasks.push(fetchRequests(matchData.id))
+      if (!isJoinedLocal && !isCreatorLocal) tasks.push(fetchMyRequest(matchData.id))
       await Promise.all(tasks)
     }
 
@@ -105,6 +128,16 @@ export default function MatchPage() {
       : []
     setPlayers(mapped)
     return mapped
+  }
+
+  async function fetchGuests(matchId) {
+    const { data } = await supabase
+      .from('match_guests')
+      .select('id, name, added_at')
+      .eq('match_id', matchId)
+      .order('added_at', { ascending: true })
+
+    setGuests(data ?? [])
   }
 
   async function fetchRequests(matchId) {
@@ -161,10 +194,7 @@ export default function MatchPage() {
   async function handleAccept(requestId) {
     setActionLoading(true)
     const { error } = await supabase.rpc('accept_match_request', { p_request_id: requestId })
-
-    if (!error) {
-      await Promise.all([fetchPlayers(match.id), fetchRequests(match.id)])
-    }
+    if (!error) await Promise.all([fetchPlayers(match.id), fetchRequests(match.id)])
     setActionLoading(false)
   }
 
@@ -179,14 +209,23 @@ export default function MatchPage() {
     setActionLoading(false)
   }
 
+  async function handleRemovePlayer(playerId) {
+    setActionLoading(true)
+    await supabase.rpc('remove_match_player', { p_match_id: match.id, p_player_id: playerId })
+    await fetchPlayers(match.id)
+    setActionLoading(false)
+  }
+
+  async function handleRemoveGuest(guestId) {
+    setActionLoading(true)
+    await supabase.rpc('remove_match_guest', { p_guest_id: guestId })
+    await fetchGuests(match.id)
+    setActionLoading(false)
+  }
+
   async function handleMakeCohost(playerId, value) {
     setActionLoading(true)
-    await supabase.rpc('set_cohost', {
-      p_match_id: match.id,
-      p_player_id: playerId,
-      p_value: value,
-    })
-
+    await supabase.rpc('set_cohost', { p_match_id: match.id, p_player_id: playerId, p_value: value })
     await fetchPlayers(match.id)
     setActionLoading(false)
   }
@@ -194,9 +233,7 @@ export default function MatchPage() {
   async function handleLeave() {
     setActionLoading(true)
     await supabase.from('match_players').delete().eq('match_id', match.id).eq('player_id', user.id)
-    // Borrar la solicitud para que pueda pedir de nuevo si quiere
     await supabase.from('match_requests').delete().eq('match_id', match.id).eq('player_id', user.id)
-
     await fetchPlayers(match.id)
     setMyRequest(null)
     setActionLoading(false)
@@ -204,11 +241,9 @@ export default function MatchPage() {
 
   async function handleCancelMatch() {
     if (!window.confirm('¿Seguro que quieres cancelar este partido? Se eliminará para todos los jugadores.')) return
-
     setActionLoading(true)
     const { error } = await supabase.from('matches').delete().eq('id', match.id)
     setActionLoading(false)
-
     if (!error) navigate('/')
   }
 
@@ -354,7 +389,7 @@ export default function MatchPage() {
           </div>
         </div>
 
-        {/* Solicitudes pendientes (solo para host/co-host) */}
+        {/* Solicitudes pendientes (solo host/co-host) */}
         {canManageRequests && requests.length > 0 && (
           <div className="bg-white rounded-2xl shadow-sm border border-yellow-100 px-6 py-5">
             <h2 className="font-semibold text-gray-800 mb-4">
@@ -396,10 +431,11 @@ export default function MatchPage() {
             Jugadores confirmados ({occupiedSpots})
           </h2>
 
-          {players.length === 0 ? (
+          {occupiedSpots === 0 ? (
             <p className="text-gray-400 text-sm">Aún no hay jugadores confirmados.</p>
           ) : (
             <ul className="space-y-3">
+              {/* Jugadores registrados */}
               {players.map((player) => (
                 <li key={player.id} className="flex items-center gap-3">
                   <Avatar player={player} />
@@ -412,15 +448,43 @@ export default function MatchPage() {
                       <p className="text-xs text-blue-600">Co-host</p>
                     )}
                   </div>
-                  {/* Botón co-host: solo el creador puede asignar/quitar */}
+                  {/* Hacer/quitar co-host: solo el creador, no en sí mismo */}
                   {isCreator && player.id !== match.creator_id && (
                     <button
                       onClick={() => handleMakeCohost(player.id, !player.is_cohost)}
                       disabled={actionLoading}
                       className="text-xs text-gray-400 hover:text-blue-600 transition-colors disabled:opacity-40 shrink-0"
                     >
-                      {player.is_cohost ? 'Quitar co-host' : 'Hacer co-host'}
+                      {player.is_cohost ? 'Quitar co-host' : 'Co-host'}
                     </button>
+                  )}
+                  {/* Eliminar jugador: host puede a cualquiera menos a sí mismo;
+                      co-host puede a cualquiera menos al host y a sí mismo */}
+                  {canManageRequests &&
+                    player.id !== match.creator_id &&
+                    player.id !== user?.id && (
+                      <RemoveButton
+                        onClick={() => handleRemovePlayer(player.id)}
+                        disabled={actionLoading}
+                      />
+                    )}
+                </li>
+              ))}
+
+              {/* Jugadores externos (sin cuenta) */}
+              {guests.map((guest) => (
+                <li key={guest.id} className="flex items-center gap-3">
+                  <GuestAvatar />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-400">
+                      {guest.name || 'Cupo ocupado'}
+                    </p>
+                  </div>
+                  {canManageRequests && (
+                    <RemoveButton
+                      onClick={() => handleRemoveGuest(guest.id)}
+                      disabled={actionLoading}
+                    />
                   )}
                 </li>
               ))}

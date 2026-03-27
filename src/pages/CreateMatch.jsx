@@ -18,6 +18,7 @@ export default function CreateMatch() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const [form, setForm] = useState(INITIAL_FORM)
+  const [guests, setGuests] = useState([])
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
 
@@ -28,10 +29,31 @@ export default function CreateMatch() {
     setForm(prev => ({ ...prev, [name]: value }))
   }
 
+  function addGuest() {
+    setGuests(prev => [...prev, ''])
+  }
+
+  function removeGuest(index) {
+    setGuests(prev => prev.filter((_, i) => i !== index))
+  }
+
+  function updateGuest(index, value) {
+    setGuests(prev => prev.map((g, i) => (i === index ? value : g)))
+  }
+
   async function handleSubmit(e) {
     e.preventDefault()
     setError(null)
     setLoading(true)
+
+    const totalSpots = parseInt(form.total_spots)
+
+    // El host ocupa 1 cupo, los guests pre-agregados ocupan los suyos
+    if (guests.length >= totalSpots) {
+      setError('Los cupos pre-agregados no pueden ocupar todos los cupos (tú ya ocupas uno como organizador).')
+      setLoading(false)
+      return
+    }
 
     // Verificar si el usuario ya tiene un partido activo
     const { data: existing } = await supabase
@@ -60,7 +82,7 @@ export default function CreateMatch() {
         match_date:   form.match_date,
         match_time:   form.match_time,
         location:     form.location.trim(),
-        total_spots:  parseInt(form.total_spots),
+        total_spots:  totalSpots,
         visibility:   form.visibility,
         slug,
       })
@@ -77,6 +99,13 @@ export default function CreateMatch() {
     await supabase
       .from('match_players')
       .insert({ match_id: data.id, player_id: user.id })
+
+    // Insertar jugadores externos si los hay
+    if (guests.length > 0) {
+      await supabase
+        .from('match_guests')
+        .insert(guests.map(name => ({ match_id: data.id, name: name.trim() || null })))
+    }
 
     setLoading(false)
     navigate(`/partido/${data.slug}`)
@@ -198,7 +227,7 @@ export default function CreateMatch() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Cupos disponibles <span className="text-red-500">*</span>
+                Cupos totales <span className="text-red-500">*</span>
               </label>
               <input
                 type="number"
@@ -206,7 +235,7 @@ export default function CreateMatch() {
                 value={form.total_spots}
                 onChange={handleChange}
                 required
-                min={1}
+                min={2}
                 max={50}
                 placeholder="Ej: 14"
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
@@ -246,6 +275,54 @@ export default function CreateMatch() {
                 <span className="text-xs text-gray-500">Solo visible para invitados directos</span>
               </button>
             </div>
+          </div>
+
+          {/* Jugadores pre-agregados (sin cuenta) */}
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-6 py-5 space-y-3">
+            <div>
+              <p className="text-sm font-medium text-gray-500 uppercase tracking-wide">
+                Cupos pre-ocupados
+                <span className="ml-2 text-xs font-normal text-gray-400 normal-case">(opcional)</span>
+              </p>
+              <p className="text-xs text-gray-400 mt-1">
+                Jugadores ya confirmados que no tienen cuenta en la app. El nombre es opcional.
+              </p>
+            </div>
+
+            {guests.map((name, index) => (
+              <div key={index} className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
+                  <svg className="w-4 h-4 text-gray-400" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                  </svg>
+                </div>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => updateGuest(index, e.target.value)}
+                  maxLength={60}
+                  placeholder="Nombre (opcional)"
+                  className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                />
+                <button
+                  type="button"
+                  onClick={() => removeGuest(index)}
+                  className="text-gray-300 hover:text-red-400 transition-colors p-1"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            ))}
+
+            <button
+              type="button"
+              onClick={addGuest}
+              className="w-full text-sm text-green-700 border border-dashed border-green-300 rounded-lg py-2.5 hover:bg-green-50 transition-colors"
+            >
+              + Agregar cupo pre-ocupado
+            </button>
           </div>
 
           {error && (
