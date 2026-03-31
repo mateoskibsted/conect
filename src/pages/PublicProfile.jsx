@@ -26,7 +26,7 @@ export default function PublicProfile() {
 
   async function loadData() {
     const [{ data: prof }, { count }, { data: friendships }] = await Promise.all([
-      supabase.from('profiles').select('id, full_name, avatar_url').eq('id', id).single(),
+      supabase.from('profiles').select('id, full_name, username, avatar_url').eq('id', id).single(),
       supabase.from('match_players').select('id', { count: 'exact', head: true }).eq('player_id', id),
       supabase
         .from('friendships')
@@ -172,6 +172,9 @@ export default function PublicProfile() {
           )}
 
           <h1 className="text-xl font-bold text-gray-900">{profile.full_name}</h1>
+          {profile.username && (
+            <p className="text-sm text-green-700 font-medium -mt-2">@{profile.username}</p>
+          )}
 
           <div className="flex flex-col items-center px-8 py-3 bg-gray-50 rounded-xl">
             <span className="text-2xl font-bold text-green-600">{matchesPlayed}</span>

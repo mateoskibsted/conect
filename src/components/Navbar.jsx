@@ -34,8 +34,8 @@ export default function Navbar() {
     const timer = setTimeout(async () => {
       const { data } = await supabase
         .from('profiles')
-        .select('id, full_name, avatar_url')
-        .ilike('full_name', `%${query.trim()}%`)
+        .select('id, full_name, username, avatar_url')
+        .or(`full_name.ilike.%${query.trim()}%,username.ilike.%${query.trim()}%`)
         .neq('id', user?.id ?? '')
         .limit(5)
       setResults(data ?? [])
@@ -100,7 +100,10 @@ export default function Navbar() {
                       </span>
                     </div>
                   )}
-                  <span className="text-sm text-gray-800 font-medium truncate">{u.full_name}</span>
+                  <div className="min-w-0">
+                    <p className="text-sm text-gray-800 font-medium truncate">{u.full_name}</p>
+                    {u.username && <p className="text-xs text-gray-400 truncate">@{u.username}</p>}
+                  </div>
                 </button>
               )) : (
                 <p className="text-sm text-gray-500 text-center px-3 py-3">Sin resultados</p>

@@ -23,6 +23,7 @@ export default function CreateMatch() {
   const [loading, setLoading] = useState(false)
 
   const today = new Date().toISOString().split('T')[0]
+  const maxDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
 
   function handleChange(e) {
     const { name, value } = e.target
@@ -187,6 +188,7 @@ export default function CreateMatch() {
                   onChange={handleChange}
                   required
                   min={today}
+                  max={maxDate}
                   className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 />
               </div>

@@ -1,8 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
+
+const USERNAME_REGEX = /^[a-z0-9_]{3,20}$/
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import Navbar from '../components/Navbar'
+import MatchCard from '../components/MatchCard'
 
 export default function Profile() {
   const { user } = useAuth()
@@ -16,9 +19,19 @@ export default function Profile() {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState(null)
+  const [playedMatches, setPlayedMatches] = useState([])
+
+  // Para usuarios sin username
+  const [newUsername, setNewUsername] = useState('')
+  const [usernameStatus, setUsernameStatus] = useState('idle') // idle | checking | available | taken | invalid
+  const [savingUsername, setSavingUsername] = useState(false)
+  const [usernameError, setUsernameError] = useState(null)
 
   useEffect(() => {
-    fetchProfile()
+    if (user) {
+      fetchProfile()
+      fetchPlayedMatches()
+    }
   }, [user])
 
   async function fetchProfile() {
@@ -35,6 +48,36 @@ export default function Profile() {
     }
   }
 
+  async function fetchPlayedMatches() {
+    const { data: myMatches } = await supabase
+      .from('match_players')
+      .select('match_id')
+      .eq('player_id', user.id)
+
+    if (!myMatches?.length) return
+
+    const matchIds = myMatches.map(r => r.match_id)
+
+    const { data } = await supabase
+      .from('matches')
+      .select(`
+        id, title, slug, sport, match_date, match_time,
+        location, total_spots, visibility,
+        match_players(count),
+        match_guests(count)
+      `)
+      .in('id', matchIds)
+      .order('match_date', { ascending: false })
+
+    const played = (data ?? []).filter(m => {
+      const players = m.match_players?.[0]?.count ?? 0
+      const guests = m.match_guests?.[0]?.count ?? 0
+      return players + guests >= m.total_spots
+    })
+
+    setPlayedMatches(played)
+  }
+
   async function handleAvatarClick() {
     fileInputRef.current?.click()
   }
@@ -43,7 +86,7 @@ export default function Profile() {
     const file = e.target.files?.[0]
     if (!file) return
 
-    const maxSize = 2 * 1024 * 1024 // 2MB
+    const maxSize = 2 * 1024 * 1024
     if (file.size > maxSize) {
       setError('La imagen debe pesar menos de 2MB.')
       return
@@ -65,19 +108,51 @@ export default function Profile() {
       return
     }
 
-    const { data: urlData } = supabase.storage
-      .from('avatars')
-      .getPublicUrl(path)
-
+    const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(path)
     const publicUrl = urlData.publicUrl
 
-    await supabase
-      .from('profiles')
-      .update({ avatar_url: publicUrl })
-      .eq('id', user.id)
+    await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', user.id)
 
     setAvatarUrl(publicUrl)
     setUploading(false)
+  }
+
+  // Verificación de disponibilidad del username (solo para usuarios sin username)
+  useEffect(() => {
+    const u = newUsername
+    if (!u) { setUsernameStatus('idle'); return }
+    if (!USERNAME_REGEX.test(u)) { setUsernameStatus('invalid'); return }
+
+    setUsernameStatus('checking')
+    const timer = setTimeout(async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('username', u)
+        .maybeSingle()
+      setUsernameStatus(data ? 'taken' : 'available')
+    }, 400)
+    return () => clearTimeout(timer)
+  }, [newUsername])
+
+  async function handleSaveUsername() {
+    if (usernameStatus !== 'available') return
+    setUsernameError(null)
+    setSavingUsername(true)
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({ username: newUsername })
+      .eq('id', user.id)
+
+    setSavingUsername(false)
+
+    if (error) {
+      setUsernameError('Error al guardar el nombre de usuario.')
+    } else {
+      setProfile(prev => ({ ...prev, username: newUsername }))
+      setNewUsername('')
+    }
   }
 
   async function handleSave(e) {
@@ -119,7 +194,7 @@ export default function Profile() {
 
       <div className="max-w-lg mx-auto px-4 py-6 space-y-4">
         {/* Foto de perfil */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-6 py-6 flex flex-col items-center gap-4">
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-6 py-6 flex flex-col items-center gap-3">
           <div className="relative">
             <button
               type="button"
@@ -160,6 +235,9 @@ export default function Profile() {
             />
           </div>
 
+          {profile.username && (
+            <p className="text-sm font-medium text-green-700">@{profile.username}</p>
+          )}
           <p className="text-sm text-gray-400">
             {uploading ? 'Subiendo...' : 'Toca la foto para cambiarla'}
           </p>
@@ -182,6 +260,24 @@ export default function Profile() {
               className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
             />
           </div>
+
+          {profile.username && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Nombre de usuario
+              </label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-medium select-none">@</span>
+                <input
+                  type="text"
+                  value={profile.username}
+                  disabled
+                  className="w-full pl-8 pr-4 py-2.5 border border-gray-100 rounded-lg bg-gray-50 text-gray-400 cursor-not-allowed"
+                />
+              </div>
+              <p className="text-xs text-gray-400 mt-1">El nombre de usuario no se puede cambiar</p>
+            </div>
+          )}
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -208,6 +304,55 @@ export default function Profile() {
           </button>
         </form>
 
+        {/* Elegir username (solo para usuarios que aún no tienen) */}
+        {!profile.username && (
+          <div className="bg-amber-50 border border-amber-200 rounded-2xl px-6 py-5 space-y-4">
+            <div>
+              <p className="text-sm font-medium text-amber-800 uppercase tracking-wide">Elige tu nombre de usuario</p>
+              <p className="text-xs text-amber-700 mt-1">Una vez elegido no podrás cambiarlo.</p>
+            </div>
+
+            <div>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-medium select-none">@</span>
+                <input
+                  type="text"
+                  value={newUsername}
+                  onChange={e => setNewUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+                  maxLength={20}
+                  placeholder="tunombredeusuario"
+                  className="w-full pl-8 pr-4 py-2.5 border border-amber-200 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent"
+                />
+              </div>
+              {usernameStatus === 'invalid' && (
+                <p className="text-xs text-red-500 mt-1">Solo letras minúsculas, números y guiones bajos (3–20 caracteres)</p>
+              )}
+              {usernameStatus === 'checking' && (
+                <p className="text-xs text-gray-400 mt-1">Verificando disponibilidad...</p>
+              )}
+              {usernameStatus === 'available' && (
+                <p className="text-xs text-green-600 mt-1">Disponible</p>
+              )}
+              {usernameStatus === 'taken' && (
+                <p className="text-xs text-red-500 mt-1">Este nombre de usuario ya está en uso</p>
+              )}
+            </div>
+
+            {usernameError && (
+              <p className="text-sm text-red-600 bg-red-50 px-4 py-2.5 rounded-lg">{usernameError}</p>
+            )}
+
+            <button
+              type="button"
+              onClick={handleSaveUsername}
+              disabled={savingUsername || usernameStatus !== 'available'}
+              className="w-full bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white font-semibold py-2.5 rounded-lg transition-colors"
+            >
+              {savingUsername ? 'Guardando...' : 'Guardar nombre de usuario'}
+            </button>
+          </div>
+        )}
+
         {/* Deportes */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-6 py-5">
           <p className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-3">Deportes</p>
@@ -218,6 +363,26 @@ export default function Profile() {
               <p className="text-xs text-green-600">Más deportes disponibles próximamente</p>
             </div>
           </div>
+        </div>
+
+        {/* Partidos jugados */}
+        <div className="space-y-3">
+          <p className="text-sm font-medium text-gray-500 uppercase tracking-wide px-1">
+            Partidos jugados
+            {playedMatches.length > 0 && (
+              <span className="ml-2 normal-case font-normal text-gray-400">({playedMatches.length})</span>
+            )}
+          </p>
+
+          {playedMatches.length === 0 ? (
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-6 py-8 text-center">
+              <p className="text-gray-400 text-sm">Aún no tienes partidos jugados</p>
+            </div>
+          ) : (
+            playedMatches.map(match => (
+              <MatchCard key={match.id} match={match} />
+            ))
+          )}
         </div>
       </div>
     </div>
