@@ -7,6 +7,7 @@ import MatchPage from './pages/MatchPage'
 import CreateMatch from './pages/CreateMatch'
 import Home from './pages/Home'
 import Profile from './pages/Profile'
+import PublicProfile from './pages/PublicProfile'
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
             <Route path="/"      element={<AuthGuard><Home /></AuthGuard>} />
             <Route path="/crear"   element={<AuthGuard><CreateMatch /></AuthGuard>} />
             <Route path="/perfil" element={<AuthGuard><Profile /></AuthGuard>} />
+            <Route path="/usuario/:id" element={<AuthGuard><PublicProfile /></AuthGuard>} />
           </Routes>
         </div>
       </AuthProvider>
