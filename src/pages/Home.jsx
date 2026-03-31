@@ -96,7 +96,7 @@ export default function Home() {
       <div className="relative z-10">
         <Navbar />
 
-        <div className="max-w-lg mx-auto px-4 py-6 space-y-5">
+        <div className="max-w-lg mx-auto px-4 py-6 pb-24 md:pb-6 space-y-5">
           {/* CTA crear partido */}
           <Link
             to="/crear"

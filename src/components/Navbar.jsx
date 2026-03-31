@@ -73,8 +73,8 @@ export default function Navbar() {
           Conect
         </Link>
 
-        {/* Buscador */}
-        <div ref={searchRef} className="flex-1 relative">
+        {/* Buscador – solo en desktop (en móvil está en la barra inferior) */}
+        <div ref={searchRef} className="flex-1 relative hidden md:block">
           <input
             type="text"
             placeholder="Buscar jugadores..."
@@ -123,7 +123,7 @@ export default function Navbar() {
             onClick={handleLogout}
             className="text-sm text-white/80 hover:text-white transition-colors"
           >
-            Cerrar sesión
+            Salir
           </button>
         </div>
       </div>

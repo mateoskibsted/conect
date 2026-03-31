@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 
 const USERNAME_REGEX = /^[a-z0-9_]{3,20}$/
-import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import Navbar from '../components/Navbar'
@@ -20,6 +20,7 @@ export default function Profile() {
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState(null)
   const [playedMatches, setPlayedMatches] = useState([])
+  const [friendCount, setFriendCount] = useState(0)
 
   // Para usuarios sin username
   const [newUsername, setNewUsername] = useState('')
@@ -31,6 +32,7 @@ export default function Profile() {
     if (user) {
       fetchProfile()
       fetchPlayedMatches()
+      fetchFriendCount()
     }
   }, [user])
 
@@ -46,6 +48,16 @@ export default function Profile() {
       setFullName(data.full_name)
       setAvatarUrl(data.avatar_url)
     }
+  }
+
+  async function fetchFriendCount() {
+    const [{ data: sent }, { data: received }] = await Promise.all([
+      supabase.from('friendships').select('addressee_id').eq('requester_id', user.id).eq('status', 'accepted'),
+      supabase.from('friendships').select('requester_id').eq('addressee_id', user.id).eq('status', 'accepted'),
+    ])
+    const sentSet = new Set((sent ?? []).map(f => f.addressee_id))
+    const receivedSet = new Set((received ?? []).map(f => f.requester_id))
+    setFriendCount([...sentSet].filter(id => receivedSet.has(id)).length)
   }
 
   async function fetchPlayedMatches() {
@@ -192,7 +204,7 @@ export default function Profile() {
     <div className="min-h-screen bg-gray-50">
       <Navbar />
 
-      <div className="max-w-lg mx-auto px-4 py-6 space-y-4">
+      <div className="max-w-lg mx-auto px-4 py-6 pb-24 md:pb-6 space-y-4">
         {/* Foto de perfil */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-6 py-6 flex flex-col items-center gap-3">
           <div className="relative">
@@ -238,6 +250,18 @@ export default function Profile() {
           {profile.username && (
             <p className="text-sm font-medium text-green-700">@{profile.username}</p>
           )}
+
+          <div className="flex gap-6">
+            <Link to="/amigos" className="flex flex-col items-center hover:opacity-70 transition-opacity">
+              <span className="text-lg font-bold text-gray-900">{friendCount}</span>
+              <span className="text-xs text-gray-500">amigos</span>
+            </Link>
+            <div className="flex flex-col items-center">
+              <span className="text-lg font-bold text-gray-900">{playedMatches.length}</span>
+              <span className="text-xs text-gray-500">partidos</span>
+            </div>
+          </div>
+
           <p className="text-sm text-gray-400">
             {uploading ? 'Subiendo...' : 'Toca la foto para cambiarla'}
           </p>
