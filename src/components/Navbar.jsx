@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
@@ -5,6 +6,19 @@ import { useAuth } from '../context/AuthContext'
 export default function Navbar() {
   const { user } = useAuth()
   const navigate = useNavigate()
+  const [displayName, setDisplayName] = useState('Perfil')
+
+  useEffect(() => {
+    if (!user) return
+    supabase
+      .from('profiles')
+      .select('full_name')
+      .eq('id', user.id)
+      .single()
+      .then(({ data }) => {
+        if (data?.full_name) setDisplayName(data.full_name.split(' ')[0])
+      })
+  }, [user])
 
   async function handleLogout() {
     await supabase.auth.signOut()
@@ -23,13 +37,13 @@ export default function Navbar() {
             to="/perfil"
             className="text-sm text-white hover:text-green-100 transition-colors"
           >
-            {user?.user_metadata?.full_name?.split(' ')[0] ?? 'Perfil'}
+            {displayName}
           </Link>
           <button
             onClick={handleLogout}
             className="text-sm text-white/80 hover:text-white transition-colors"
           >
-            Salir
+            Cerrar sesión
           </button>
         </div>
       </div>
