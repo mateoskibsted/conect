@@ -8,11 +8,14 @@ import ballImg from '../assets/ball.jpg'
 import kidsImg from '../assets/kids.jpg'
 import stadium2Img from '../assets/stadium2.jpg'
 
+const SLIDES = [ballImg, kidsImg, stadium2Img]
+
 export default function Home() {
   const { user } = useAuth()
   const [matches, setMatches] = useState([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all') // 'all' | 'friends'
+  const [slideIndex, setSlideIndex] = useState(0)
   const [friendIds, setFriendIds] = useState(null) // null = no cargado
   const [friendMatchIds, setFriendMatchIds] = useState(null)
   const [loadingFriends, setLoadingFriends] = useState(false)
@@ -26,6 +29,13 @@ export default function Home() {
       loadFriendData()
     }
   }, [filter, user])
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setSlideIndex(i => (i + 1) % SLIDES.length)
+    }, 4000)
+    return () => clearInterval(id)
+  }, [])
 
   async function fetchMatches() {
     const today = new Date().toISOString().split('T')[0]
@@ -86,11 +96,17 @@ export default function Home() {
 
   return (
     <div className="min-h-screen relative">
-      {/* Fondo tríptico */}
-      <div className="absolute inset-0 flex overflow-hidden z-0">
-        <img src={ballImg} alt="" className="w-1/3 h-full object-cover" />
-        <img src={kidsImg} alt="" className="w-1/3 h-full object-cover" />
-        <img src={stadium2Img} alt="" className="w-1/3 h-full object-cover" />
+      {/* Fondo slideshow */}
+      <div className="absolute inset-0 overflow-hidden z-0">
+        {SLIDES.map((src, i) => (
+          <img
+            key={src}
+            src={src}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover transition-opacity duration-1000"
+            style={{ opacity: i === slideIndex ? 1 : 0 }}
+          />
+        ))}
         <div className="absolute inset-0 bg-black/30" />
       </div>
 
