@@ -8,7 +8,11 @@ import ballImg from '../assets/ball.jpg'
 import kidsImg from '../assets/kids.jpg'
 import stadium2Img from '../assets/stadium2.jpg'
 
-const SLIDES = [ballImg, kidsImg, stadium2Img]
+const SLIDES = [
+  { src: ballImg,     objectPosition: 'center center' },
+  { src: kidsImg,     objectPosition: 'center top'    },
+  { src: stadium2Img, objectPosition: 'center center' },
+]
 
 export default function Home() {
   const { user } = useAuth()
@@ -98,13 +102,17 @@ export default function Home() {
     <div className="min-h-screen relative">
       {/* Fondo móvil: slideshow (oculto en desktop) */}
       <div className="absolute inset-0 overflow-hidden z-0 md:hidden">
-        {SLIDES.map((src, i) => (
+        {SLIDES.map((slide, i) => (
           <img
-            key={src}
-            src={src}
+            key={slide.src}
+            src={slide.src}
             alt=""
-            className="absolute inset-0 w-full h-full object-cover transition-opacity duration-[1500ms]"
-            style={{ opacity: i === slideIndex ? 1 : 0 }}
+            className="absolute inset-0 w-full h-full object-cover"
+            style={{
+              opacity: i === slideIndex ? 1 : 0,
+              objectPosition: slide.objectPosition,
+              transition: 'opacity 1500ms ease-in-out',
+            }}
           />
         ))}
         <div className="absolute inset-0 bg-black/30" />
