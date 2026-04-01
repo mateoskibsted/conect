@@ -87,7 +87,7 @@ export default function Home() {
   return (
     <div className="min-h-screen relative">
       {/* Fondo tríptico */}
-      <div className="fixed inset-0 flex overflow-hidden z-0">
+      <div className="absolute inset-0 flex overflow-hidden z-0">
         <img src={ballImg} alt="" className="w-1/3 h-full object-cover" />
         <img src={kidsImg} alt="" className="w-1/3 h-full object-cover" />
         <img src={stadium2Img} alt="" className="w-1/3 h-full object-cover" />
