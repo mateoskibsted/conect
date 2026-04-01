@@ -53,7 +53,7 @@ export default function BottomNav() {
     <>
       {/* Overlay de búsqueda (pantalla completa en móvil) */}
       {searchOpen && (
-        <div className="fixed inset-0 z-50 bg-white flex flex-col md:hidden">
+        <div className="fixed inset-0 z-50 bg-white flex flex-col md:hidden" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
           {/* Header con input */}
           <div className="flex items-center gap-2 px-3 py-2.5 border-b border-gray-100 bg-white">
             <button
@@ -122,7 +122,7 @@ export default function BottomNav() {
       )}
 
       {/* Barra inferior */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-green-600 border-t border-green-700 md:hidden">
+      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-green-600 border-t border-green-700 md:hidden" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
         <div className="flex items-center justify-around h-14 max-w-lg mx-auto">
 
           {/* Inicio */}

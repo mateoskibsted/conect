@@ -67,8 +67,8 @@ export default function Navbar() {
   }
 
   return (
-    <nav className="bg-green-600 px-4 py-3 sticky top-0 z-10">
-      <div className="max-w-lg mx-auto flex items-center gap-3">
+    <nav className="bg-green-600 px-4 sticky top-0 z-10" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+      <div className="max-w-lg mx-auto flex items-center gap-3 py-3">
         <Link to="/" className="text-xl font-bold text-white shrink-0">
           Conect
         </Link>

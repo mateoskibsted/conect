@@ -193,7 +193,7 @@ export default function ChatPage() {
   return (
     <div className="flex flex-col h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white border-b border-gray-100 px-4 py-3 flex items-center gap-3 shrink-0">
+      <div className="bg-white border-b border-gray-100 px-4 py-3 flex items-center gap-3 shrink-0" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 0.75rem)' }}>
         <Link
           to={`/partido/${slug}`}
           className="text-green-600 p-1 -ml-1"
@@ -264,6 +264,7 @@ export default function ChatPage() {
       <form
         onSubmit={handleSend}
         className="bg-white border-t border-gray-100 px-4 py-3 flex items-center gap-2 shrink-0"
+        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 0.75rem)' }}
       >
         <input
           ref={inputRef}
