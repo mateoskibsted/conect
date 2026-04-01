@@ -70,6 +70,8 @@ export default function MatchPage() {
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState(false)
   const [notFound, setNotFound] = useState(false)
+  const [showAddGuest, setShowAddGuest] = useState(false)
+  const [newGuestName, setNewGuestName] = useState('')
 
   const occupiedSpots = players.length + guests.length
   const isFull = occupiedSpots >= (match?.total_spots ?? 0)
@@ -219,6 +221,18 @@ export default function MatchPage() {
   async function handleRemoveGuest(guestId) {
     setActionLoading(true)
     await supabase.rpc('remove_match_guest', { p_guest_id: guestId })
+    await fetchGuests(match.id)
+    setActionLoading(false)
+  }
+
+  async function handleAddGuest() {
+    setActionLoading(true)
+    await supabase.from('match_guests').insert({
+      match_id: match.id,
+      name: newGuestName.trim() || null,
+    })
+    setNewGuestName('')
+    setShowAddGuest(false)
     await fetchGuests(match.id)
     setActionLoading(false)
   }
@@ -489,6 +503,53 @@ export default function MatchPage() {
                 </li>
               ))}
             </ul>
+          )}
+
+          {/* Agregar cupo pre-ocupado (host y co-host) */}
+          {canManageRequests && (
+            <div className={occupiedSpots > 0 ? 'mt-4 pt-3 border-t border-gray-50' : 'mt-2'}>
+              {showAddGuest ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
+                    <svg className="w-4 h-4 text-gray-400" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                    </svg>
+                  </div>
+                  <input
+                    type="text"
+                    value={newGuestName}
+                    onChange={(e) => setNewGuestName(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleAddGuest()}
+                    maxLength={60}
+                    placeholder="Nombre (opcional)"
+                    autoFocus
+                    className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  />
+                  <button
+                    onClick={handleAddGuest}
+                    disabled={actionLoading}
+                    className="text-xs font-semibold bg-green-600 hover:bg-green-700 disabled:opacity-40 text-white px-3 py-2 rounded-lg transition-colors shrink-0"
+                  >
+                    Agregar
+                  </button>
+                  <button
+                    onClick={() => { setShowAddGuest(false); setNewGuestName('') }}
+                    className="text-gray-300 hover:text-gray-500 transition-colors p-1 shrink-0"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              ) : !isFull ? (
+                <button
+                  onClick={() => setShowAddGuest(true)}
+                  className="w-full text-sm text-green-700 border border-dashed border-green-300 rounded-lg py-2.5 hover:bg-green-50 transition-colors"
+                >
+                  + Agregar cupo pre-ocupado
+                </button>
+              ) : null}
+            </div>
           )}
         </div>
 

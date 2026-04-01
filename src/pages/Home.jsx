@@ -34,7 +34,8 @@ export default function Home() {
       .select(`
         id, title, slug, sport, match_date, match_time,
         location, total_spots, visibility, creator_id,
-        match_players(count)
+        match_players(count),
+        match_guests(count)
       `)
       .eq('visibility', 'public')
       .gte('match_date', today)

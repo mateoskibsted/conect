@@ -11,7 +11,7 @@ function formatTime(timeStr) {
 }
 
 export default function MatchCard({ match }) {
-  const occupied = match.match_players?.[0]?.count ?? 0
+  const occupied = (match.match_players?.[0]?.count ?? 0) + (match.match_guests?.[0]?.count ?? 0)
   const isFull = occupied >= match.total_spots
   const spotsLeft = match.total_spots - occupied
 
