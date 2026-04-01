@@ -122,7 +122,7 @@ export default function BottomNav() {
       )}
 
       {/* Barra inferior */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-green-600 border-t border-green-700 md:hidden" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-green-600 border-t border-green-700" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
         <div className="flex items-center justify-around h-14 max-w-lg mx-auto">
 
           {/* Inicio */}
@@ -142,10 +142,10 @@ export default function BottomNav() {
             {isHome && <span className="absolute bottom-1 w-1 h-1 rounded-full bg-white" />}
           </Link>
 
-          {/* Buscar */}
+          {/* Buscar – solo en móvil; en desktop el buscador está en el Navbar superior */}
           <button
             onClick={() => setSearchOpen(true)}
-            className="flex flex-col items-center justify-center gap-0.5 flex-1 h-full relative"
+            className="flex flex-col items-center justify-center gap-0.5 flex-1 h-full relative md:hidden"
           >
             <svg
               className={`w-6 h-6 text-white transition-opacity ${searchOpen ? 'opacity-100' : 'opacity-50'}`}

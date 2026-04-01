@@ -124,7 +124,7 @@ export default function CreateMatch() {
         <h1 className="font-semibold text-gray-800">Crear partido</h1>
       </div>
 
-      <div className="max-w-lg mx-auto px-4 py-6" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 1.5rem)' }}>
+      <div className="max-w-lg mx-auto px-4 py-6 pb-bottom-nav">
         <form onSubmit={handleSubmit} className="space-y-4">
 
           {/* Deporte – fijo en MVP */}

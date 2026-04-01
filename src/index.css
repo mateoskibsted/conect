@@ -8,6 +8,6 @@
 }
 @media (min-width: 768px) {
   .pb-bottom-nav {
-    padding-bottom: 1.5rem;
+    padding-bottom: 3.5rem; /* h-14: altura del BottomNav en desktop (sin safe area) */
   }
 }
