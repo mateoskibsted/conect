@@ -2,12 +2,48 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
+    <!-- PWA manifest -->
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+
+    <!-- Título y descripción -->
     <title>Conect – Conecta con jugadores</title>
+    <meta name="description" content="Organiza y únete a partidos de fútbol cerca de ti" />
+
+    <!-- Theme color (barra del navegador en Android) -->
+    <meta name="theme-color" content="#16a34a" />
+
+    <!-- ── iOS / Safari ─────────────────────────────────────── -->
+    <!-- Activa el modo standalone en Safari (oculta la barra de Safari) -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <!-- Color de la barra de estado en iOS -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <!-- Nombre que aparece debajo del ícono en la pantalla de inicio -->
+    <meta name="apple-mobile-web-app-title" content="Conect" />
+    <!-- Ícono para la pantalla de inicio de iPhone/iPad -->
+    <link rel="apple-touch-icon" href="/icon.svg" />
+
+    <!-- ── Android / Open Graph ──────────────────────────────── -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="application-name" content="Conect" />
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+
+    <!-- Registro del Service Worker -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function () {
+          navigator.serviceWorker.register('/sw.js').catch(function (err) {
+            console.warn('SW registration failed:', err)
+          })
+        })
+      }
+    </script>
   </body>
 </html>
