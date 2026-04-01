@@ -11,6 +11,8 @@ import Profile from './pages/Profile'
 import PublicProfile from './pages/PublicProfile'
 import Friends from './pages/Friends'
 import ChatPage from './pages/ChatPage'
+import Settings from './pages/Settings'
+import FriendRequests from './pages/FriendRequests'
 
 function AppContent() {
   const { user } = useAuth()
@@ -32,6 +34,8 @@ function AppContent() {
         <Route path="/usuario/:id" element={<AuthGuard><PublicProfile /></AuthGuard>} />
         <Route path="/amigos"                  element={<AuthGuard><Friends /></AuthGuard>} />
         <Route path="/amigos/:id"            element={<AuthGuard><Friends /></AuthGuard>} />
+        <Route path="/solicitudes"           element={<AuthGuard><FriendRequests /></AuthGuard>} />
+        <Route path="/ajustes"               element={<AuthGuard><Settings /></AuthGuard>} />
         <Route path="/partido/:slug/chat"    element={<AuthGuard><ChatPage /></AuthGuard>} />
       </Routes>
 

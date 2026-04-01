@@ -10,7 +10,7 @@ import stadium2Img from '../assets/stadium2.jpg'
 
 const SLIDES = [
   { src: ballImg,     objectPosition: 'center center' },
-  { src: kidsImg,     objectPosition: 'center top'    },
+  { src: kidsImg,     objectPosition: 'center 30%'    },
   { src: stadium2Img, objectPosition: 'center center' },
 ]
 
@@ -107,14 +107,15 @@ export default function Home() {
       <div className="flex-1 relative overflow-hidden">
 
         {/* Fondo móvil: slideshow */}
-        <div className="absolute inset-0 md:hidden bg-black">
+        <div className="absolute inset-0 md:hidden">
           {SLIDES.map((slide, i) => (
             <img
               key={slide.src}
               src={slide.src}
               alt=""
-              className="absolute inset-0 w-full h-full object-contain"
+              className="absolute inset-0 w-full h-full object-cover"
               style={{
+                objectPosition: slide.objectPosition,
                 opacity: i === slideIndex ? 1 : 0,
                 transition: 'opacity 1500ms ease-in-out',
               }}

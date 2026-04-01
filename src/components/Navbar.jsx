@@ -1,28 +1,20 @@
 import { useState, useEffect, useRef } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 
 export default function Navbar() {
   const { user } = useAuth()
   const navigate = useNavigate()
-  const [displayName, setDisplayName] = useState('Perfil')
+  const { pathname } = useLocation()
   const [query, setQuery] = useState('')
   const [results, setResults] = useState([])
   const [showResults, setShowResults] = useState(false)
+  const [pendingCount, setPendingCount] = useState(0)
   const searchRef = useRef(null)
 
-  useEffect(() => {
-    if (!user) return
-    supabase
-      .from('profiles')
-      .select('full_name')
-      .eq('id', user.id)
-      .single()
-      .then(({ data }) => {
-        if (data?.full_name) setDisplayName(data.full_name.split(' ')[0])
-      })
-  }, [user])
+  const isProfilePage = pathname === '/perfil'
+  const isFriendsPage = pathname.startsWith('/amigos')
 
   // Búsqueda con debounce
   useEffect(() => {
@@ -55,10 +47,16 @@ export default function Navbar() {
     return () => document.removeEventListener('mousedown', handleClick)
   }, [])
 
-  async function handleLogout() {
-    await supabase.auth.signOut()
-    navigate('/login')
-  }
+  // Solicitudes pendientes — solo se consulta cuando el usuario está en /amigos
+  useEffect(() => {
+    if (!isFriendsPage || !user) return
+    supabase
+      .from('friendships')
+      .select('*', { count: 'exact', head: true })
+      .eq('addressee_id', user.id)
+      .eq('status', 'pending')
+      .then(({ count }) => setPendingCount(count ?? 0))
+  }, [isFriendsPage, user])
 
   function goToProfile(id) {
     setQuery('')
@@ -112,20 +110,37 @@ export default function Navbar() {
           )}
         </div>
 
-        <div className="flex items-center gap-3 shrink-0">
+        {/* Engranaje en /perfil */}
+        {isProfilePage && (
           <Link
-            to="/perfil"
-            className="text-sm text-white hover:text-green-100 transition-colors"
+            to="/ajustes"
+            className="ml-auto md:ml-0 text-white/90 hover:text-white transition-colors shrink-0"
+            aria-label="Ajustes"
           >
-            {displayName}
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
           </Link>
-          <button
-            onClick={handleLogout}
-            className="text-sm text-white/80 hover:text-white transition-colors"
+        )}
+
+        {/* Solicitudes de amistad en /amigos */}
+        {isFriendsPage && (
+          <Link
+            to="/solicitudes"
+            className="ml-auto md:ml-0 relative text-white/90 hover:text-white transition-colors shrink-0"
+            aria-label="Solicitudes de amistad"
           >
-            Salir
-          </button>
-        </div>
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+            </svg>
+            {pendingCount > 0 && (
+              <span className="absolute -top-1 -right-1 min-w-[1rem] h-4 px-0.5 bg-red-500 rounded-full text-white text-[10px] font-bold flex items-center justify-center leading-none">
+                {pendingCount > 9 ? '9+' : pendingCount}
+              </span>
+            )}
+          </Link>
+        )}
       </div>
     </nav>
   )
