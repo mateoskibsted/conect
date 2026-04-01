@@ -10,6 +10,7 @@ import Home from './pages/Home'
 import Profile from './pages/Profile'
 import PublicProfile from './pages/PublicProfile'
 import Friends from './pages/Friends'
+import ChatPage from './pages/ChatPage'
 
 function AppContent() {
   const { user } = useAuth()
@@ -29,8 +30,9 @@ function AppContent() {
         <Route path="/crear"       element={<AuthGuard><CreateMatch /></AuthGuard>} />
         <Route path="/perfil"      element={<AuthGuard><Profile /></AuthGuard>} />
         <Route path="/usuario/:id" element={<AuthGuard><PublicProfile /></AuthGuard>} />
-        <Route path="/amigos"      element={<AuthGuard><Friends /></AuthGuard>} />
-        <Route path="/amigos/:id"  element={<AuthGuard><Friends /></AuthGuard>} />
+        <Route path="/amigos"                  element={<AuthGuard><Friends /></AuthGuard>} />
+        <Route path="/amigos/:id"            element={<AuthGuard><Friends /></AuthGuard>} />
+        <Route path="/partido/:slug/chat"    element={<AuthGuard><ChatPage /></AuthGuard>} />
       </Routes>
 
       {!hideBottomNav && <BottomNav />}
