@@ -1,3 +1,13 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Padding inferior que suma la safe area del iPhone al alto del BottomNav */
+.pb-bottom-nav {
+  padding-bottom: calc(env(safe-area-inset-bottom) + 6rem);
+}
+@media (min-width: 768px) {
+  .pb-bottom-nav {
+    padding-bottom: 1.5rem;
+  }
+}

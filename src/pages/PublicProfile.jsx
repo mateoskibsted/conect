@@ -183,7 +183,7 @@ export default function PublicProfile() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
-      <div className="max-w-lg mx-auto px-4 py-8 pb-24 md:pb-8 space-y-4">
+      <div className="max-w-lg mx-auto px-4 py-8 pb-bottom-nav space-y-4">
         <div className="bg-white rounded-2xl shadow-sm p-8 flex flex-col items-center gap-3">
           {profile.avatar_url ? (
             <img src={profile.avatar_url} alt="" className="w-24 h-24 rounded-full object-cover ring-4 ring-green-100" />

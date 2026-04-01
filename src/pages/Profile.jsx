@@ -204,7 +204,7 @@ export default function Profile() {
     <div className="min-h-screen bg-gray-50">
       <Navbar />
 
-      <div className="max-w-lg mx-auto px-4 py-6 pb-24 md:pb-6 space-y-4">
+      <div className="max-w-lg mx-auto px-4 py-6 pb-bottom-nav space-y-4">
         {/* Foto de perfil */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-6 py-6 flex flex-col items-center gap-3">
           <div className="relative">

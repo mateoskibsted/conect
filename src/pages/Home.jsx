@@ -131,7 +131,7 @@ export default function Home() {
           <div className="absolute inset-0 bg-black/30" />
         </div>
 
-        <div className="relative z-10 max-w-lg mx-auto px-4 py-6 pb-24 md:pb-6 space-y-5">
+        <div className="relative z-10 max-w-lg mx-auto px-4 py-6 pb-bottom-nav space-y-5">
           {/* CTA crear partido */}
           <Link
             to="/crear"

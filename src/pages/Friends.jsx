@@ -64,7 +64,7 @@ export default function Friends() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
-      <div className="max-w-lg mx-auto px-4 py-6 pb-24 md:pb-6">
+      <div className="max-w-lg mx-auto px-4 py-6 pb-bottom-nav">
         <h1 className="text-lg font-bold text-gray-900 mb-4">{title}</h1>
 
         {loading ? (
