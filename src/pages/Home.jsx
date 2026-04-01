@@ -107,16 +107,15 @@ export default function Home() {
       <div className="flex-1 relative overflow-hidden">
 
         {/* Fondo móvil: slideshow */}
-        <div className="absolute inset-0 md:hidden">
+        <div className="absolute inset-0 md:hidden bg-black">
           {SLIDES.map((slide, i) => (
             <img
               key={slide.src}
               src={slide.src}
               alt=""
-              className="absolute inset-0 w-full h-full object-cover"
+              className="absolute inset-0 w-full h-full object-contain"
               style={{
                 opacity: i === slideIndex ? 1 : 0,
-                objectPosition: slide.objectPosition,
                 transition: 'opacity 1500ms ease-in-out',
               }}
             />
