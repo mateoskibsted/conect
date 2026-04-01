@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <!-- Fondo verde lleno al borde (maskable: sin bordes redondeados) -->
-  <rect width="512" height="512" fill="#16a34a"/>
-  <rect width="512" height="512" fill="url(#grad)" opacity="0.2"/>
+  <rect width="512" height="512" fill="#16a34a" shape-rendering="crispEdges"/>
+  <rect width="512" height="512" fill="url(#grad)" opacity="0.2" shape-rendering="crispEdges"/>
   <!-- Contenido dentro del safe zone (80% = ~410px, margen ~51px) -->
   <text
     x="264"

@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <!-- Fondo verde redondeado -->
-  <rect width="512" height="512" rx="115" fill="#16a34a"/>
+  <rect width="512" height="512" fill="#16a34a"/>
   <!-- Sombra interior sutil -->
   <rect width="512" height="512" rx="115" fill="url(#grad)" opacity="0.25"/>
   <!-- Letra C -->
