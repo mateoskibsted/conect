@@ -33,7 +33,7 @@ export default function Home() {
   useEffect(() => {
     const id = setInterval(() => {
       setSlideIndex(i => (i + 1) % SLIDES.length)
-    }, 4000)
+    }, 10000)
     return () => clearInterval(id)
   }, [])
 
@@ -96,17 +96,25 @@ export default function Home() {
 
   return (
     <div className="min-h-screen relative">
-      {/* Fondo slideshow */}
-      <div className="absolute inset-0 overflow-hidden z-0">
+      {/* Fondo móvil: slideshow (oculto en desktop) */}
+      <div className="absolute inset-0 overflow-hidden z-0 md:hidden">
         {SLIDES.map((src, i) => (
           <img
             key={src}
             src={src}
             alt=""
-            className="absolute inset-0 w-full h-full object-cover transition-opacity duration-1000"
+            className="absolute inset-0 w-full h-full object-cover transition-opacity duration-[1500ms]"
             style={{ opacity: i === slideIndex ? 1 : 0 }}
           />
         ))}
+        <div className="absolute inset-0 bg-black/30" />
+      </div>
+
+      {/* Fondo desktop: tríptico (oculto en móvil) */}
+      <div className="absolute inset-0 overflow-hidden z-0 hidden md:flex">
+        <img src={ballImg} alt="" className="w-1/3 h-full object-cover" />
+        <img src={kidsImg} alt="" className="w-1/3 h-full object-cover" />
+        <img src={stadium2Img} alt="" className="w-1/3 h-full object-cover" />
         <div className="absolute inset-0 bg-black/30" />
       </div>
 
