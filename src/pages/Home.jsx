@@ -99,37 +99,40 @@ export default function Home() {
   const isFriendsLoading = filter === 'friends' && (loadingFriends || friendIds === null)
 
   return (
-    <div className="min-h-screen relative">
-      {/* Fondo móvil: slideshow (oculto en desktop) */}
-      <div className="absolute inset-0 overflow-hidden z-0 md:hidden">
-        {SLIDES.map((slide, i) => (
-          <img
-            key={slide.src}
-            src={slide.src}
-            alt=""
-            className="absolute inset-0 w-full h-full object-cover"
-            style={{
-              opacity: i === slideIndex ? 1 : 0,
-              objectPosition: slide.objectPosition,
-              transition: 'opacity 1500ms ease-in-out',
-            }}
-          />
-        ))}
-        <div className="absolute inset-0 bg-black/30" />
-      </div>
+    <div className="min-h-screen flex flex-col">
+      {/* Navbar fuera del fondo: el slideshow empieza debajo de él */}
+      <Navbar />
 
-      {/* Fondo desktop: tríptico (oculto en móvil) */}
-      <div className="absolute inset-0 overflow-hidden z-0 hidden md:flex">
-        <img src={ballImg} alt="" className="w-1/3 h-full object-cover" />
-        <img src={kidsImg} alt="" className="w-1/3 h-full object-cover" />
-        <img src={stadium2Img} alt="" className="w-1/3 h-full object-cover" />
-        <div className="absolute inset-0 bg-black/30" />
-      </div>
+      {/* Área entre navbar y barra inferior */}
+      <div className="flex-1 relative overflow-hidden">
 
-      <div className="relative z-10">
-        <Navbar />
+        {/* Fondo móvil: slideshow */}
+        <div className="absolute inset-0 md:hidden">
+          {SLIDES.map((slide, i) => (
+            <img
+              key={slide.src}
+              src={slide.src}
+              alt=""
+              className="absolute inset-0 w-full h-full object-cover"
+              style={{
+                opacity: i === slideIndex ? 1 : 0,
+                objectPosition: slide.objectPosition,
+                transition: 'opacity 1500ms ease-in-out',
+              }}
+            />
+          ))}
+          <div className="absolute inset-0 bg-black/30" />
+        </div>
 
-        <div className="max-w-lg mx-auto px-4 py-6 pb-24 md:pb-6 space-y-5">
+        {/* Fondo desktop: tríptico */}
+        <div className="absolute inset-0 hidden md:flex">
+          <img src={ballImg} alt="" className="w-1/3 h-full object-cover" />
+          <img src={kidsImg} alt="" className="w-1/3 h-full object-cover" />
+          <img src={stadium2Img} alt="" className="w-1/3 h-full object-cover" />
+          <div className="absolute inset-0 bg-black/30" />
+        </div>
+
+        <div className="relative z-10 max-w-lg mx-auto px-4 py-6 pb-24 md:pb-6 space-y-5">
           {/* CTA crear partido */}
           <Link
             to="/crear"
@@ -198,7 +201,7 @@ export default function Home() {
             )}
           </div>
         </div>
-      </div>
+      </div>{/* fin flex-1 */}
     </div>
   )
 }
